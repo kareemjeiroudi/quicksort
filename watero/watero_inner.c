@@ -3,6 +3,7 @@
 #include <math.h>
 #include <time.h> // for CPU time
 #include <sys/time.h> //for gettimeofday
+#include <omp.h>
 
 #define LENGTH 80
 // global variables
@@ -39,7 +40,7 @@ double energy12(int i1,int i2){
   return ene;
 }
 
-main(){
+int main(int argc, char *argv[]) {
   int i,j,natoms,nmol;
   double energy=0,dtime;
   FILE *fp;
@@ -47,6 +48,12 @@ main(){
   clock_t cputime; /* clock_t defined in <time.h> and <sys/types.h> as int */
   struct timeval start, end;
 
+  // variables for openMP
+  int nthreads = omp_get_num_threads(); /* Obtain number of launched threads */
+  int me = omp_get_thread_num();   /* Obtain thread number */
+
+  
+  // Reading is done in Serial fashion
   printf("Program to calculate energy of water\n");
   printf("Input NAME of configuration file\n");
   scanf("%s",name); // reading of filename from keyboard 
@@ -59,7 +66,9 @@ main(){
     for(j=0;j<=2;j++){
       fgets(line, LENGTH,fp);
       sscanf(line, "%s %s %s %lf %lf %lf",nothing,nothing,nothing, &r[i][j][0],&r[i][j][1],&r[i][j][2]);
-  } }
+    }
+  }
+
   printf("first line %lf %lf %lf\n",r[0][0][0],r[0][0][1],r[0][0][2]);
   fscanf(fp, "%lf",&L); // read box size
   printf("Box size %lf\n",L);
@@ -67,8 +76,18 @@ main(){
   cputime = clock();    // assign initial CPU time (IN CPU CLOCKS)
   gettimeofday(&start, NULL); // returns structure with time in s and us (microseconds)
 
-  for(i=0;i<nmol-1;i++){ // calculate energy as sum over all pairs
-    for(j=i+1;j<nmol;j++) energy=energy+energy12(i,j);
+  /* Calculation loop (needs to be parallelized)*/
+  int npairs = 0;
+  #pragma omp parallel for shared(nmol) private(i, npairs) reduction(+:energy)
+  for(i=0;i<nmol-1;i++) { // calculate energy as sum over all pairs
+    for(j=i+1;j<nmol;j++) {
+      energy=energy+energy12(i,j);
+      npairs = npairs + 1;
+    }
+  }
+  #pragma omp parallel
+  {
+    printf("Threads %d caculated %d paris\n", me, npairs);
   }
 
   cputime= clock()-cputime;      // calculate  cpu clock time as difference of times after-before
@@ -80,4 +99,5 @@ main(){
   printf("Elapsed wall time: %f\n", dtime);
   printf("Elapsed CPU  time: %f\n", (float) cputime/CLOCKS_PER_SEC);
   fclose(fp);
+  return 0;
 }

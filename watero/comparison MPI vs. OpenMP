@@ -1,0 +1,2 @@
+The CPU time of OpenMP is slightly less than MPI.
+The Wall time, on the other hand, is roughly the same. sometimes higher, othertimes smaller.
