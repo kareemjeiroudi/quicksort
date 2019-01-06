@@ -2,6 +2,8 @@
 #include <time.h> // for CPU time
 #include <sys/time.h> //for gettimeofday
 #include <stdio.h>
+#include <omp.h>
+
 #define max_len 400000
 #define LENGTH 40
 
@@ -22,7 +24,7 @@ while(1){ //1 serves as true, i.e. condition which is always true
   if(fgets(line, LENGTH,fp)==NULL)break; // finish reading when empty line is read
   if(sscanf(line, "%lf %lf",&b[i],&c[i])==-1) break; // finish reading after error
   i++;
-} /*while end */
+} /* while end */
 
 len=i-1;fclose(fp);
 printf("Number of items to sort: %i\n",len);
@@ -31,10 +33,14 @@ gettimeofday(&time1, NULL); // returns structure with time in s and us (microsec
 ind[0]=1;
 for(j=2;j<=len;j++){ // start sorting with the second item
   new=b[j];cnew=c[j];cur=0;
+  #pragma omp parallel for private(i, prev, cur) auto
   for(i=1;i<j;i++){
     prev=cur;cur=ind[cur];
     if(new==b[cur]){printf("Equal numbers %lf\n",new);}
-    if((new<b[cur]) | ((new==b[cur])&(cnew<c[cur]))){ind[prev]=j;ind[j]=cur;goto loop;}
+    if((new<b[cur]) | ((new==b[cur])&(cnew<c[cur])))
+    {
+      ind[prev]=j;ind[j]=cur;goto loop;
+    }
   }
   // new number is the largest so far
   ind[cur]=j;
