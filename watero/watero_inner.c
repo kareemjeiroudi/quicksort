@@ -5,9 +5,9 @@
 #include <sys/time.h> //for gettimeofday
 #include <omp.h>
 
-#define LENGTH 80
+#define LENGTH 200
 // global variables
-const int maxnum=10000;
+const int maxnum=500000;
 double r[maxnum][3][3],rcutsq=1.44,L;
 // r(number of molecule, atom 0=O,1=H,2=H, coordinate 0=x,1=y,2=z)
 
@@ -77,9 +77,10 @@ int main(int argc, char *argv[]) {
   gettimeofday(&start, NULL); // returns structure with time in s and us (microseconds)
 
   /* Calculation loop (needs to be parallelized)*/
-  int npairs = 0;
-  #pragma omp parallel for shared(nmol) private(i, npairs) reduction(+:energy)
+  static int npairs=0;
+  #pragma omp threadprivate(npairs)
   for(i=0;i<nmol-1;i++) { // calculate energy as sum over all pairs
+    #pragma omp parallel for shared(nmol, i) private(j) reduction(+:energy)
     for(j=i+1;j<nmol;j++) {
       energy=energy+energy12(i,j);
       npairs = npairs + 1;
@@ -87,7 +88,8 @@ int main(int argc, char *argv[]) {
   }
   #pragma omp parallel
   {
-    printf("Threads %d caculated %d paris\n", me, npairs);
+    me = omp_get_thread_num();
+    printf("Thread %d caculated %d pairs\n", me, npairs);
   }
 
   cputime= clock()-cputime;      // calculate  cpu clock time as difference of times after-before
