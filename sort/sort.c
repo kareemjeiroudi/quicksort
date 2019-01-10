@@ -12,7 +12,7 @@ char name[LENGTH]="sort.txt",line[LENGTH];
 FILE *fp;
 clock_t cpu0,cpu1,cpu2,cpu3; // clock_t defined in <time.h> and <sys/types.h> as int
 struct timeval time0, time1,time2,time3; // for wall clock in s and us
-double dtime12, dtime03; // for wall clock in s (real number)
+double  dtime12,dtime03; // for wall clock in s (real number)
 
 cpu0 = clock();    // assign initial CPU time (IN CPU CLOCKS)
 gettimeofday(&time0, NULL); // returns structure with time in s and us (microseconds)
@@ -22,8 +22,7 @@ while(1){ //1 serves as true, i.e. condition which is always true
   if(fgets(line, LENGTH,fp)==NULL)break; // finish reading when empty line is read
   if(sscanf(line, "%lf %lf",&b[i],&c[i])==-1) break; // finish reading after error
   i++;
-} /*while end */
-
+}
 len=i-1;fclose(fp);
 printf("Number of items to sort: %i\n",len);
 cpu1 = clock();    // assign initial CPU time (IN CPU CLOCKS)
