@@ -17,7 +17,8 @@ main()
 	i = me * range, g = 0; // i is starting point where each thread should start storing elements from original array
     Nme = (me+1) * range; // Nme is the ending element where each thread should end storing elements from original array
     printf("%d %d %d\n", me, i, Nme);
-   	int b_me[range]; // b_me are equivelent to b[] but contain only those element that thread n is responisble for
+   	int *b_me[] = malloc(sizeof(b)/2); // b_me are equivelent to b[] but contain only those element that thread n is responisble for
+   	printf("Thread %d has b_me of size %d\n", me, (int)sizeof(b_me));
     // each thread stored its b_me
     for(i; i<Nme; i++) {
       b_me[g] = b[i]+1;

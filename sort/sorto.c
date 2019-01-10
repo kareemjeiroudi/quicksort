@@ -58,7 +58,7 @@ int start, Nme, g, num_threads;
     double qua_1st = (min+mid)/2;
     double qua_3rd = (mid+max)/2;
   }
-  double* b_me[] = malloc(sizeof(b)/2);
+  double b_me[] = malloc(sizeof(b)/2);
 }
 len=i-1;fclose(fp);
 printf("Number of items to sort: %i\n",len);
