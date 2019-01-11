@@ -1,5 +1,17 @@
 #include <stdio.h>
 
+double find_size_of_dynamic(double *array, int maximum_bound) {
+	int size;
+	for(int i=0; i<maximum_bound; i++)
+    {
+        if(isnan(array[i])) {
+			size = i;
+            break;
+        }
+    }
+	return size;
+}
+
 main() {
 	double *dy_array;
   	dy_array = malloc(sizeof(double));
@@ -10,20 +22,6 @@ main() {
   		dy_array[i] = i+1;
   		printf("%f\n", dy_array[i]);
   	}
-
-  	int len = 0;
-    for(int i= 0; i<30; i++)
-    {
-    	printf("%d\n", i);
-        if(isnan(dy_array[i])) {
-			len = i;
-            break;
-        }
-        else if(i==21 | i==22 | i==23) {
-        	printf("\n");
-        	printf("i is %f\n", dy_array[i]);
-        }
-    }
-    printf("%f\n", dy_array[10]);
-    printf("size of dynamic array %d\n", len);
+    
+    printf("size of dynamic array %f\n", find_size_of_dynamic(dy_array, 40));
 }
