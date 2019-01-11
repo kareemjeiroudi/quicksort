@@ -2,12 +2,30 @@
 #include <time.h> // for CPU time
 #include <sys/time.h> //for gettimeofday
 #include <stdio.h>
+#include <stdlib.h>
+#include <omp.h>
+
 #define max_len 400000
 #define LENGTH 40
 
-double find_minimum(double array[]) {
+/* Takes a dynamic array and maximum expected boundary,
+ * returns the real size of tha array
+ */
+// int find_size_of_dynamic(double *array, int maximum_bound) {
+//   int size;
+//   for(int i=0; i<maximum_bound; i++) {
+//     // once the array doesn't return proper value, break!
+//     if(isnan(array[i])) {
+//        size = i;
+//        break;
+//     }
+//   }
+//   return size;
+// }
+
+double find_minimum(double *array, int length) {
   double min=0;
-  int length = (int) (sizeof(array)/sizeof(array[0]));
+  // int length = (int) (sizeof(array)/sizeof(array[0]));
   for(int i=0;i<length;i++) {
     if(array[i] < min) {
       min = array[i];
@@ -16,11 +34,11 @@ double find_minimum(double array[]) {
   return min;
 }
 
-double find_maximum(double array[]) {
+double find_maximum(double *array, int length) {
   double max=0;
-  int length = (int) (sizeof(array)/sizeof(array[0]));
+  // int length = (int) (sizeof(array)/sizeof(array[0]));
   for(int i=0;i<length;i++) {
-    if(array[i] < max) {
+    if(array[i] > max) {
       max = array[i];
     }
   }
@@ -45,58 +63,98 @@ while(1){ //1 serves as true, i.e. condition which is always true
   if(sscanf(line, "%lf %lf",&b[i],&c[i])==-1) break; // finish reading after error
   i++;
 }
-
-int start, Nme, g, k, num_threads, range;
-#pragma omp parallel shared(min, max, mid, qua_1st, qua_3rd, range) private(start, Nme, g, k)
-{
-  me = omp_get_thread_num();
-  if (me==0) {
-    // following values are to set the ranges of each thread according to the values
-    double min = find_minimum(b);
-    double max = find_maximum(b);
-    double mid = (min+max)/2;
-    double qua_1st = (min+mid)/2;
-    double qua_3rd = (mid+max)/2;
-    start = min;
-    Nme = qua_1st;
-  }
-  else if(me==1) {
-    start = qua_1st;
-    Nme = mid;
-  } 
-  else if(me==2) {
-    start = mid;
-    Nme = qua_3rd;
-  }
-  else if(me==3) {
-    start = qua_3rd;
-    Nme = max;
-  }
-  int range = (int) (sizeof(b)/sizeof(b[0]))
-  double b_me[range];
-  for(g=)
-}
 len=i-1;fclose(fp);
 printf("Number of items to sort: %i\n",len);
-cpu1 = clock();    // assign initial CPU time (IN CPU CLOCKS)
-gettimeofday(&time1, NULL); // returns structure with time in s and us (microseconds)
-ind[0]=1;
-for(j=2;j<=len;j++){ // start sorting with the second item
-  new=b[j];cnew=c[j];cur=0;
-  for(i=1;i<j;i++){
-    prev=cur;cur=ind[cur];
-    if(new==b[cur]){printf("Equal numbers %lf\n",new);}
-    if((new<b[cur]) | ((new==b[cur])&(cnew<c[cur]))){ind[prev]=j;ind[j]=cur;goto loop;}
+
+
+/* split b into postive and negative ones, where all are shared variables
+ * this way, it's also a shortcut for sorting, because we skip the part of comparing
+ * positive values with negative ones.
+ * 
+ * Each will be sorted independetly 
+ */
+double *b_positive = malloc(sizeof(double));
+double *b_me_positive = malloc(sizeof(double)); // private to each thread
+int *b_positive_counts = malloc(sizeof(int)); // shared on the contrary
+double *b_negative = malloc(sizeof(double));
+int *b_negative_counts = malloc(sizeof(int));
+int pos=0, neg=0, ele=0;
+for(ele=0; ele<len+1;ele++) {
+  if(b[ele]>0) {
+    b_positive[pos] = b[ele];
+    pos++;
   }
-  // new number is the largest so far
-  ind[cur]=j;
-  loop: ;
+  else if(b[ele] <0) {
+    b_negative[neg] = b[ele];
+    neg++;
+  }
 }
-cpu2 = clock();    // assign CPU time (IN CPU CLOCKS)
-gettimeofday(&time2, NULL);
-dtime12 = ((time2.tv_sec  - time1.tv_sec)+(time2.tv_usec - time1.tv_usec)/1e6);
-printf("Elapsed wall time sorting         CPU time\n");
-printf("Duration 12 %f %f\n", dtime12,(float) (cpu2-cpu1)/CLOCKS_PER_SEC);
+int me, num_threads;
+double start, end, max, min;
+max = find_maximum(b_positive, pos);
+min = find_minimum(b_negative, neg);
+printf("This is min %lf\n", min);
+printf("This is max %lf\n", max);
+/* the parallel region */
+#pragma omp parallel private(me, start, end, ele, b_me_positive) shared(b_positive_counts, num_threads, max, min, pos, neg)
+{
+  num_threads = omp_get_num_threads();
+  me = omp_get_thread_num();
+  printf("This is me %d\n", me);
+  // the starting point of each thread
+  start = me * (max/num_threads +1);
+  end = (me+1) * (max/num_threads +1);
+  printf("thread %d has start %lf and end %lf \n", me, start, end);
+  b_positive_counts[me] = 0;
+  for(ele=0;ele<pos;ele++) {
+    if(b_positive[ele] >= start & b_positive[ele] < end) {
+      b_me_positive[b_positive_counts[me]] = b_positive[ele];
+      b_positive_counts[me]++;
+    }
+  }
+
+  printf("\n");
+  printf("thread %d has %d b_positives to sort\n", me, b_positive_counts[me] );
+}
+// pos 513
+// neg 487
+
+//   // each thread finds the size of its array
+//   size = find_size_of_dynamic(b_me, len+1);
+//   double b_me[range];
+//   ind[0]=1;
+//   for(g=2;g<=size;g++) { // start sorting with the second item
+//     new=b_me[g];cnew=c_me[g];cur=0;
+//     for(k=1;k<g;k++){
+//       prev=cur;cur=ind[cur];
+//       if(new==b_me[cur]){printf("Equal numbers %lf\n",new);}
+//       if((new<b_me[cur]) | ((new==b_me[cur])&(cnew<c_me[cur]))){ind[prev]=g;ind[g]=cur;goto loop;}
+//     }
+//     // new number is the largest so far
+//     ind[cur]=j;
+//     loop: ;
+//   }
+  
+  cpu1 = clock();    // assign initial CPU time (IN CPU CLOCKS)
+  gettimeofday(&time1, NULL); // returns structure with time in s and us (microseconds)
+  ind[0]=1;
+  for(j=2;j<=len;j++){ // start sorting with the second item
+    new=b[j];cnew=c[j];cur=0;
+    for(i=1;i<j;i++){
+      prev=cur;cur=ind[cur];
+      if(new==b[cur]){printf("Equal numbers %lf\n",new);}
+      if((new<b[cur]) | ((new==b[cur])&(cnew<c[cur]))){ind[prev]=j;ind[j]=cur;goto loop;}
+    }
+    // new number is the largest so far
+    ind[cur]=j;
+    loop: ;
+  }
+  cpu2 = clock();    // assign CPU time (IN CPU CLOCKS)
+  gettimeofday(&time2, NULL);
+  dtime12 = ((time2.tv_sec  - time1.tv_sec)+(time2.tv_usec - time1.tv_usec)/1e6);
+  printf("Elapsed wall time sorting         CPU time\n");
+  printf("Duration 12 %f %f\n", dtime12,(float) (cpu2-cpu1)/CLOCKS_PER_SEC);
+// } /* End of Parallel Region */
 cur=0;
 fp=fopen("sorted.txt","w");
 for(i=1;i<=len;i++){cur=ind[cur];fprintf(fp,"%lf %lf\n",b[cur],c[cur]);}
