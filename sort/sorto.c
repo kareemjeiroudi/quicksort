@@ -46,8 +46,8 @@ while(1){ //1 serves as true, i.e. condition which is always true
   i++;
 }
 
-int start, Nme, g, num_threads;
-#pragma omp parallel shared(min, max)
+int start, Nme, g, k, num_threads, range;
+#pragma omp parallel shared(min, max, mid, qua_1st, qua_3rd, range) private(start, Nme, g, k)
 {
   me = omp_get_thread_num();
   if (me==0) {
@@ -57,8 +57,24 @@ int start, Nme, g, num_threads;
     double mid = (min+max)/2;
     double qua_1st = (min+mid)/2;
     double qua_3rd = (mid+max)/2;
+    start = min;
+    Nme = qua_1st;
   }
-  double b_me[] = malloc(sizeof(b)/2);
+  else if(me==1) {
+    start = qua_1st;
+    Nme = mid;
+  } 
+  else if(me==2) {
+    start = mid;
+    Nme = qua_3rd;
+  }
+  else if(me==3) {
+    start = qua_3rd;
+    Nme = max;
+  }
+  int range = (int) (sizeof(b)/sizeof(b[0]))
+  double b_me[range];
+  for(g=)
 }
 len=i-1;fclose(fp);
 printf("Number of items to sort: %i\n",len);
