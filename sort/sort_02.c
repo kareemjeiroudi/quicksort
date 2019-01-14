@@ -36,15 +36,17 @@ printf("Number of items to sort: %i\n",len);
  */
 
 int range, num_threads, me;
-#pragma omp parallel shared(range, num_threads, len, b, c) private(i)
+#pragma omp parallel shared(range, num_threads, len, b, c) private(me, i, j, new, cnew, cur, fp)
 {
+  printf("HI\n");
   num_threads = omp_get_num_threads();
   me = omp_get_thread_num();
   range = len/num_threads;
   int start = me * range;
   int end = (me+1) * range;
   double b_me[range];
-  double cme[range];
+  double c_me[range];
+  double ind_me[range];
   for(i=start;i<end;i++) {
     b_me[i] = b[i];
     c_me[i] = c[i];
@@ -52,14 +54,14 @@ int range, num_threads, me;
 
   ind[0]=1;
   for(j=2;j<=range;j++){ // start sorting with the second item
-    new=b[j];cnew=c[j];cur=0;
+    new=b_me[j];cnew=c_me[j];cur=0;
     for(i=1;i<j;i++){
       prev=cur;cur=ind[cur];
       if(new==b_me[cur]){printf("Equal numbers %lf\n",new);}
-      if((new<b_me[cur]) | ((new==b_me[cur])&(cnew<c[cur]))){ind[prev]=j;ind[j]=cur;goto loop;}
+      if((new<b_me[cur]) | ((new==b_me[cur])&(cnew<c_me[cur]))){ind_me[prev]=j;ind_me[j]=cur;goto loop;}
     }
     // new number is the largest so far
-    ind[cur]=j;
+    ind_me[cur]=j;
     loop: ;
   }
   cpu2 = clock();    // assign CPU time (IN CPU CLOCKS)
@@ -68,8 +70,11 @@ int range, num_threads, me;
   printf("Elapsed wall time sorting         CPU time\n");
   printf("Duration 12 %f %f\n", dtime12,(float) (cpu2-cpu1)/CLOCKS_PER_SEC);
   cur=0;
-  fp=fopen("sorted.txt","w");
-  for(i=1;i<=len;i++){cur=ind[cur];fprintf(fp,"%lf %lf\n",b_me[cur],c[cur]);}
+  if(me==0){fp=fopen("sorted_0.txt","w");}
+  else if(me==1){fp=fopen("sorted_1.txt","w");}
+  else if(me==2){fp=fopen("sorted_2.txt","w");}
+  else if(me==3){fp=fopen("sorted_3.txt","w");}
+  for(i=1;i<=range;i++){cur=ind_me[cur];fprintf(fp,"%lf %lf\n",b_me[cur],c_me[cur]);}
   fclose(fp);
   cpu3 = clock();    // assign initial CPU time (IN CPU CLOCKS)
   gettimeofday(&time3, NULL); // returns structure with time in s and us (microseconds)
