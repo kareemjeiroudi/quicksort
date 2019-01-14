@@ -73,12 +73,12 @@ printf("Number of items to sort: %i\n",len);
  * 
  * Each will be sorted independetly 
  */
-double *b_positive = malloc(sizeof(int)*len);
+double *b_positive = malloc(sizeof(double)*len);
 double *b_me_positive;
 int *b_positive_counts = malloc(sizeof(int)*len); // shared on the contrary
-double *b_negative = malloc(sizeof(int)*len);
+double *b_negative = malloc(sizeof(double)*len);
 double *b_me_negative;
-int *b_negative_counts = malloc(sizeof(int)*len);
+int *b_negative_counts;
 
 double *c_positive = malloc(sizeof(double)*len);
 double *c_me_positive;
@@ -115,11 +115,12 @@ for(ele=0; ele<len+1;ele++) {
     c_positive[c_pos] = c[ele];
     c_pos++;
   }
-  else if(c[ele] <0) {
+  else if(c[ele]<0) {
     c_negative[c_neg] = c[ele];
     c_neg++;
   }
 }
+printf("c_positive has %d\n", c_pos);
 
 /* the parallel region */
 int me, num_threads;
@@ -163,11 +164,11 @@ shared(num_threads, b_max, b_min, c_max, c_min, b_pos, b_neg, \
   #pragma omp barrier  
   c_start = me * (c_max/num_threads +1) - me;
   c_end= (me+1) * (c_max/num_threads +1) - (me+1);
-  printf("Negatives: thread %d has c_start %lf and c_end %lf \n", me, c_start, c_end);
+  printf("Postives: thread %d has c_start %lf and c_end %lf \n", me, c_start, c_end);
   c_me_positive = malloc(sizeof(double)*len);
   c_positive_counts[me] = 0;
-  for(ele=0;ele<c_max;ele++) {
-    if(c_positive[ele] <= c_start & c_positive[ele] >= c_end) {
+  for(ele=0;ele<c_pos;ele++) {
+    if(c_positive[ele] >= c_start & c_positive[ele] <= c_end) {
       c_me_positive[c_positive_counts[me]] = c_positive[ele];
       c_positive_counts[me]++;
     }
@@ -181,10 +182,10 @@ shared(num_threads, b_max, b_min, c_max, c_min, b_pos, b_neg, \
     int b_pos_count = 0, c_pos_count = 0;
     for(ele=0; ele<num_threads; ele++) {
       b_pos_count += b_positive_counts[ele];
-      c_pos_count += b_negative_counts[ele];
+      c_pos_count += c_positive_counts[ele];
     }
-    printf("positives are %d\n", b_pos_count);
-    printf("negatives are %d\n", c_pos_count);
+    printf("b_positives are %d\n", b_pos_count);
+    printf("c_positives are %d\n", c_pos_count);
   }
 
 // these two should be for 1k

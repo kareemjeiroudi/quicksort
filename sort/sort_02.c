@@ -34,54 +34,48 @@ printf("Number of items to sort: %i\n",len);
  * 
  * Each will be sorted independetly 
  */
-double *b_positive = malloc(sizeof(double)*len);
-double *b_me_positive = malloc(sizeof(double)*len); // private to each thread
-int *b_positive_counts = malloc(sizeof(int)*len); // shared on the contrary
-double *b_negative = malloc(sizeof(double)*len);
-int *b_negative_counts = malloc(sizeof(int)*len);
-int pos=0, neg=0, ele=0;
-for(ele=0; ele<len+1;ele++) {
-  if(b[ele]>0) {
-    b_positive[pos] = b[ele];
-    pos++;
-  }
-  else if(b[ele] <0) {
-    b_negative[neg] = b[ele];
-    neg++;
-  }
-}
 
-#pragma omp parallel
+int range, num_threads, me;
+#pragma omp parallel shared(range, num_threads, len, b, c) private(i)
 {
-  cpu1 = clock();    // assign initial CPU time (IN CPU CLOCKS)
-  gettimeofday(&time1, NULL); // returns structure with time in s and us (microseconds)
-}
-
-ind[0]=1;
-for(j=2;j<=len;j++){ // start sorting with the second item
-  new=b[j];cnew=c[j];cur=0;
-  for(i=1;i<j;i++){
-    prev=cur;cur=ind[cur];
-    if(new==b[cur]){printf("Equal numbers %lf\n",new);}
-    if((new<b[cur]) | ((new==b[cur])&(cnew<c[cur]))){ind[prev]=j;ind[j]=cur;goto loop;}
+  num_threads = omp_get_num_threads();
+  me = omp_get_thread_num();
+  range = len/num_threads;
+  int start = me * range;
+  int end = (me+1) * range;
+  double b_me[range];
+  double cme[range];
+  for(i=start;i<end;i++) {
+    b_me[i] = b[i];
+    c_me[i] = c[i];
   }
-  // new number is the largest so far
-  ind[cur]=j;
-  loop: ;
-}
-cpu2 = clock();    // assign CPU time (IN CPU CLOCKS)
-gettimeofday(&time2, NULL);
-dtime12 = ((time2.tv_sec  - time1.tv_sec)+(time2.tv_usec - time1.tv_usec)/1e6);
-printf("Elapsed wall time sorting         CPU time\n");
-printf("Duration 12 %f %f\n", dtime12,(float) (cpu2-cpu1)/CLOCKS_PER_SEC);
-cur=0;
-fp=fopen("sorted.txt","w");
-for(i=1;i<=len;i++){cur=ind[cur];fprintf(fp,"%lf %lf\n",b[cur],c[cur]);}
-fclose(fp);
-cpu3 = clock();    // assign initial CPU time (IN CPU CLOCKS)
-gettimeofday(&time3, NULL); // returns structure with time in s and us (microseconds)
-dtime03 = ((time3.tv_sec  - time0.tv_sec)+(time3.tv_usec - time0.tv_usec)/1e6);
-printf("Elapsed wall time complete         CPU time\n");
-printf("Duration 03 %f %f\n", dtime03,(float) (cpu3-cpu0)/CLOCKS_PER_SEC);
+
+  ind[0]=1;
+  for(j=2;j<=range;j++){ // start sorting with the second item
+    new=b[j];cnew=c[j];cur=0;
+    for(i=1;i<j;i++){
+      prev=cur;cur=ind[cur];
+      if(new==b_me[cur]){printf("Equal numbers %lf\n",new);}
+      if((new<b_me[cur]) | ((new==b_me[cur])&(cnew<c[cur]))){ind[prev]=j;ind[j]=cur;goto loop;}
+    }
+    // new number is the largest so far
+    ind[cur]=j;
+    loop: ;
+  }
+  cpu2 = clock();    // assign CPU time (IN CPU CLOCKS)
+  gettimeofday(&time2, NULL);
+  dtime12 = ((time2.tv_sec  - time1.tv_sec)+(time2.tv_usec - time1.tv_usec)/1e6);
+  printf("Elapsed wall time sorting         CPU time\n");
+  printf("Duration 12 %f %f\n", dtime12,(float) (cpu2-cpu1)/CLOCKS_PER_SEC);
+  cur=0;
+  fp=fopen("sorted.txt","w");
+  for(i=1;i<=len;i++){cur=ind[cur];fprintf(fp,"%lf %lf\n",b_me[cur],c[cur]);}
+  fclose(fp);
+  cpu3 = clock();    // assign initial CPU time (IN CPU CLOCKS)
+  gettimeofday(&time3, NULL); // returns structure with time in s and us (microseconds)
+  dtime03 = ((time3.tv_sec  - time0.tv_sec)+(time3.tv_usec - time0.tv_usec)/1e6);
+  printf("Elapsed wall time complete         CPU time\n");
+  printf("Duration 03 %f %f\n", dtime03,(float) (cpu3-cpu0)/CLOCKS_PER_SEC);
+  }
 }
 

@@ -3,7 +3,7 @@ min=0
 max=0
 for line in file.readlines():
 	# convert the first number into double
-	a = float(line.split(' ')[0])
+	a = float(line.split(' ')[1])
 	if a >max:
 		max=a
 	elif a<min:
