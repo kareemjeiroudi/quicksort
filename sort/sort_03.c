@@ -66,60 +66,44 @@ while(1){ //1 serves as true, i.e. condition which is always true
 len=i-1;fclose(fp);
 printf("Number of items to sort: %i\n",len);
 
-// KAREEM
-static double *b_me; 
-static double *c_me;
-static int *ind_me;
+double *b_me = malloc(sizeof(double)* len);
+double *c_me = malloc(sizeof(double)* len);
 int *counts = malloc(sizeof(int)* len);
 double start, end;
 double max = find_maximum(b, len);
 double min = find_minimum(b, len);
-printf("max = %lf and min = %lf\n", max, min);
 /* the parallel region */
-int me, num_threads, pos, neg;
+int me, num_threads;
 /* start and end are private to each thread
  * the four of these variables will help with defining the intervals of each thread
  */
-#pragma omp threadprivate(ind_me, b_me, c_me)
-#pragma omp parallel private(me, start, end, i, j, new, cnew, cur, prev, pos, neg, \
- cpu1, cpu2, cpu3, time1, time2, time3) shared(num_threads, counts, max, min, len, b, c) 
+#pragma omp parallel private(me, start, i, j, new, cnew, cur, prev \
+ cpu1, cpu2, cpu3, time1, time2, time3) \
+shared(num_threads, counts)
 {
   num_threads = omp_get_num_threads();
   me = omp_get_thread_num();
-  b_me = malloc(sizeof(double)* len);
-  c_me = malloc(sizeof(double)* len);
-  ind_me = malloc(sizeof(int)* len);
-  start = me * (min/num_threads +1) - me;
-  end = (me+1) * (min/num_threads +1) - (me+1);
-  counts[me]=0;
-  for(i=0;i<len;i++) {
-    if(b[i] < 0 & b[i] <= start & b[i] >= end) {
-      b_me[counts[me]] = b[i];
-      c_me[counts[me]] = c[i];
-      counts[me]++;
-    }
-  }
-  printf("Thread %d has start %lf and end %lf\n", me, start, end);
-  neg = counts[me];
-  pos =0;
+  // the starting point of each thread
   start = me * (max/num_threads +1) - me;
-  end = (me+1) * (max/num_threads +1) - (me+1);
+  end = (me+1) * (min/num_threads +1) - (me+1);
+  /* each thread will take its share of the postives */
+  counts[me] = 0;
   for(i=0;i<len;i++) {
-    if(b[i] > 0 & b[i] >= start & b[i] <= end) {
+    if(b[i] >= start & b[i] <= end) {
       b_me[counts[me]] = b[i];
       c_me[counts[me]] = c[i];
       counts[me]++;
-      pos++;
     }
   }
   #pragma omp barrier
+
   // each thread report your thread to the terminal
-  printf("Report of Thread %d\nCounts = %d\nstart = %lf and end = %lf\nsome elements %lf %lf %lf %lf\n\n", \
-    me, counts[me], start, end, b_me[0], b_me[3], b_me[9], b_me[200]);
+  printf("Report of Thread %d\nCounts = %d\nstart = %lf and end = %lf\nsome elements %lf %lf %lf\n\n", \
+    me, counts[me], start, end, b[0], b[3], b[9], b[11]);
 
     cpu1 = clock();    // assign initial CPU time (IN CPU CLOCKS)
     gettimeofday(&time1, NULL); // returns structure with time in s and us (microseconds)
-    int *ind_me = malloc(sizeof(int)*counts[me]);
+    int ind_me = malloc(sizeof(int)*counts[me]);
     ind_me[0]=1;
     for(j=2;j<=counts[me];j++){ // start sorting with the second item
       new=b_me[j];cnew=c_me[j];cur=0;
@@ -139,9 +123,7 @@ int me, num_threads, pos, neg;
     printf("Elapsed wall time sorting         CPU time\n");
     printf("Duration 12 %f %f\n", dtime12,(float) (cpu2-cpu1)/CLOCKS_PER_SEC);
     #pragma omp barrier
-    // }
-    /* printing */
-    // #pragma omp parallel ordered private(cure, me)
+    // printing
     cur=0;
     if(me==0) {
       fp=fopen("sorted.txt","w");
@@ -149,22 +131,7 @@ int me, num_threads, pos, neg;
     {
       fp=fopen("sorted.txt", "a");
     }
-    if (me==1) {
-    for(i=1;i<=counts[me];i++) {
-      cur=ind_me[cur];
-      if(b_me[cur] < 0) {
-        fprintf(fp,"%lf %lf\n",b_me[cur],c_me[cur]);
-      }
-    }
-     for(i=1;i<=counts[me];i++){
-      cur=ind_me[cur];
-      if(b_me[cur] > 0) {
-        fprintf(fp,"%lf %lf\n",b_me[cur],c_me[cur]);
-      }
-    }
-    }
-    
-    #pragma omp barrier
+    for(i=1;i<=counts[me];i++){cur=ind_me[cur];fprintf(fp,"%lf %lf\n",b_me[cur],c_me[cur]);}
     if(me==0){
       fclose(fp);
     }
@@ -173,6 +140,6 @@ int me, num_threads, pos, neg;
     dtime03 = ((time3.tv_sec  - time0.tv_sec)+(time3.tv_usec - time0.tv_usec)/1e6);
     printf("Elapsed wall time complete         CPU time\n");
     printf("Duration 03 %f %f\n", dtime03,(float) (cpu3-cpu0)/CLOCKS_PER_SEC);
-  }/* End of Parallel Region */
+  } /* End of Parallel Region */
 }
 
