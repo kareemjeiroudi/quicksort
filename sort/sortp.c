@@ -11,7 +11,7 @@
 double find_minimum(double *array, int length) {
   double min=0;
   // int length = (int) (sizeof(array)/sizeof(array[0]));
-  for(int i=0;i<length;i++) {
+  for(int i=0;i<=length;i++) {
     if(array[i] < min) {
       min = array[i];
     }
@@ -22,12 +22,31 @@ double find_minimum(double *array, int length) {
 double find_maximum(double *array, int length) {
   double max=0;
   // int length = (int) (sizeof(array)/sizeof(array[0]));
-  for(int i=0;i<length;i++) {
+  for(int i=0;i<=length;i++) {
     if(array[i] > max) {
       max = array[i];
     }
   }
   return max;
+}
+
+int * sort(double *b, double *c, int length) {
+  int i, j, cur, prev;
+  double new, cnew;
+  int * ind = malloc(sizeof(int)*length+1);
+  ind[0]=1;
+  for(j=2;j<=length;j++){ // start sorting with the second item
+    new=b[j];cnew=c[j];cur=0;
+    for(i=1;i<j;i++){
+      prev=cur;cur=ind[cur];
+      if(new==b[cur]){printf("Equal numbers %lf\n",new);}
+      if((new<b[cur]) | ((new==b[cur])&(cnew<c[cur]))){ind[prev]=j;ind[j]=cur;goto loop;}
+    }
+    // new number is the largest so far
+    ind[cur]=j;
+    loop: ;
+  }
+  return ind;  
 }
 
 int main(int argc, char **argv){
@@ -65,8 +84,8 @@ if (me ==0) {
 MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
 MPI_Bcast(&b[0], len+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 MPI_Bcast(&c[0], len+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-double max = find_maximum(b, len+1);
-double min = find_minimum(b, len+1);
+double max = find_maximum(b, len);
+double min = find_minimum(b, len);
 
 // just to assure correct communication among the threads
 // if(me==3) {
@@ -92,53 +111,48 @@ double end_pos = (me+1) * (max/nproc +1) - (me+1);
 // counts of each size of number to each thread
 int pos=0, neg=0, count=0;
 
-b_me_neg[0] = 0.0;
-b_me_pos[0] = 0.0;
 // take only negative numbers
 for(i=1;i<=len;i++) {
   if((b[i] < 0.0 && b[i] <= start_neg && b[i] > end_neg) || (b[i] == end_neg && end_neg == min)) {
-    b_me_neg[neg] = b[i];
-    c_me_neg[neg] = c[i];
+    b_me_neg[neg+1] = b[i];
+    c_me_neg[neg+1] = c[i];
     neg++;
   }
-  else if((b[i] >= 0.0 && b[i] >= start_pos && b[i] < end_pos) || (b[i] == end_pos &&  end_pos == max)) {
-    b_me_pos[pos] = b[i];
-    c_me_pos[pos] = c[i];
+  if((b[i] > 0.0 && b[i] >= start_pos && b[i] < end_pos) || (b[i] == end_pos &&  end_pos == max)) {
+    b_me_pos[pos+1] = b[i];
+    c_me_pos[pos+1] = c[i];
     pos++;
   }
 }
 count = pos + neg;
-printf("Thread %d negatively start_neg = %lf end_neg = %lf\n\
-  and positively start_pos = %lf end_pos = %lf\n\
-  pos = %d , neg = %d , count =%d\n", me, start_neg, end_neg, start_pos, end_pos, pos, neg, count);
+// printf("Thread %d negatively start_neg = %lf end_neg = %lf\n\
+//   and positively start_pos = %lf end_pos = %lf\n\
+//   pos = %d , neg = %d , count =%d\n", me, start_neg, end_neg, start_pos, end_pos, pos, neg, count);
 MPI_Barrier(MPI_COMM_WORLD);
 if(me==0)printf("\n"); // line Break for nice output
 
-
-for(i=1; i<=neg; i++) {
-  printf("Thread %d b_me_neg[%d] = %lf\n", me, i, b_me_neg[i]);
-}
-MPI_Barrier(MPI_COMM_WORLD);
-for(i=1; i<=pos; i++) {
-  printf("Thread %d b_me_pos[%d] = %lf\n", me, i, b_me_pos[i]);
-}
-MPI_Barrier(MPI_COMM_WORLD);
-if(me==0) printf("\n\n\n");
-MPI_Finalize(); // finalize MPI peacefully (the system would kill the processes otherwise)
-
 cpu1 = clock();    // assign initial CPU time (IN CPU CLOCKS)
 gettimeofday(&time1, NULL); // returns structure with time in s and us (microseconds)
-ind[0]=1;
-for(j=2;j<=len;j++){ // start sorting with the second item
-  new=b[j];cnew=c[j];cur=0;
-  for(i=1;i<j;i++){
-    prev=cur;cur=ind[cur];
-    if(new==b[cur]){printf("Equal numbers %lf\n",new);}
-    if((new<b[cur]) | ((new==b[cur])&(cnew<c[cur]))){ind[prev]=j;ind[j]=cur;goto loop;}
-  }
-  // new number is the largest so far
-  ind[cur]=j;
-  loop: ;
+
+// ind[0]=1;
+// for(j=2;j<=len;j++){ // start sorting with the second item
+//   new=b[j];cnew=c[j];cur=0;
+//   for(i=1;i<j;i++){
+//     prev=cur;cur=ind[cur];
+//     if(new==b[cur]){printf("Equal numbers %lf\n",new);}
+//     if((new<b[cur]) | ((new==b[cur])&(cnew<c[cur]))){ind[prev]=j;ind[j]=cur;goto loop;}
+//   }
+//   // new number is the largest so far
+//   ind[cur]=j;
+//   loop: ;
+// }
+ind_me_pos = sort(b_me_pos, c_me_pos, pos);
+ind_me_neg = sort(b_me_neg, c_me_neg, neg);
+for(i=1;i<=neg;i++) {
+  printf("Thread %d ind_me_neg[%d] = %d\n",me, i, ind_me_neg[i] );
+}
+for(i=1;i<=pos;i++) {
+  printf("Thread %d ind_me_pos[%d] = %d\n",me, i, ind_me_pos[i] );
 }
 cpu2 = clock();    // assign CPU time (IN CPU CLOCKS)
 gettimeofday(&time2, NULL);
@@ -146,14 +160,18 @@ dtime12 = ((time2.tv_sec  - time1.tv_sec)+(time2.tv_usec - time1.tv_usec)/1e6);
 printf("Elapsed wall time sorting         CPU time\n");
 printf("Duration 12 %f %f\n", dtime12,(float) (cpu2-cpu1)/CLOCKS_PER_SEC);
 cur=0;
-fp=fopen("sorted.txt","w");
-for(i=1;i<=len;i++){cur=ind[cur];fprintf(fp,"%lf %lf\n",b[cur],c[cur]);}
+if(me==0){fp=fopen("sorted.txt","w");}
+else {fp=fopen("sorted.txt", "a");}
+for(i=1;i<=neg;i++){cur=ind_me_neg[cur];fprintf(fp,"%lf %lf\n",b_me_neg[cur],c_me_neg[cur]);}
+cur=0;
+for(i=1;i<=pos;i++){cur=ind_me_pos[cur];fprintf(fp,"%lf %lf\n",b_me_pos[cur],c_me_pos[cur]);}
 fclose(fp);
 cpu3 = clock();    // assign initial CPU time (IN CPU CLOCKS)
 gettimeofday(&time3, NULL); // returns structure with time in s and us (microseconds)
 dtime03 = ((time3.tv_sec  - time0.tv_sec)+(time3.tv_usec - time0.tv_usec)/1e6);
 printf("Elapsed wall time complete         CPU time\n");
 printf("Duration 03 %f %f\n", dtime03,(float) (cpu3-cpu0)/CLOCKS_PER_SEC);
+MPI_Finalize(); // finalize MPI peacefully (the system would kill the processes otherwise)
 return 0;
 }
 
