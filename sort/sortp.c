@@ -43,6 +43,7 @@ int me, nproc, ierr;
 MPI_Init(&ierr, &argv); // initialise MPI
 MPI_Comm_size(MPI_COMM_WORLD, &nproc); // return total number of processors
 MPI_Comm_rank(MPI_COMM_WORLD, &me); // return number of this processor, rank=0..nproc-1
+
 if (me ==0) {
   cpu0 = clock();    // assign initial CPU time (IN CPU CLOCKS)
   gettimeofday(&time0, NULL); // returns structure with time in s and us (microseconds)
@@ -55,47 +56,74 @@ if (me ==0) {
   }
   len=i-1;fclose(fp);
   printf("Number of items to sort: %i\n",len);
+  for(i=0; i<= len; i++) {
+    printf("b[%d] = %lf\n", i, b[i]);
+  }
 }
+
+// Communication and global calculation
 MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-MPI_Bcast(&b[0], len, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-MPI_Bcast(&c[0], len, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-double max = find_maximum(b, len);
-double min = find_maximum(b, len);
+MPI_Bcast(&b[0], len+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+MPI_Bcast(&c[0], len+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+double max = find_maximum(b, len+1);
+double min = find_minimum(b, len+1);
+
+// just to assure correct communication among the threads
+// if(me==3) {
+//   printf("I'm thread %d, I didn't read the file!\nAnd I calculated the following max = %lf and min = %lf", me, max, min);
+//   for (i=0; i< len+1; i++) {
+//     printf("%lf\n", b[i]);
+//   }
+//   printf("\n");
+// }
 /* Initiate Parallelization */
-double *b_me = malloc(sizeof(double)*len);
-double *c_me = malloc(sizeof(double)*len);
-int *ind_me = malloc(sizeof(int)*len);
-double start = me * (min/nproc +1) - me;
-double end = (me+1) * (min/nproc +1) - (me+1);
+double *b_me_neg = malloc(sizeof(double)*len);
+double *c_me_neg = malloc(sizeof(double)*len);
+int *ind_me_neg = malloc(sizeof(int)*len);
+double *b_me_pos = malloc(sizeof(double)*len);
+double *c_me_pos = malloc(sizeof(double)*len);
+int *ind_me_pos = malloc(sizeof(int)*len);
+// start and end of negative numbers
+double start_neg = me * (min/nproc +1) - me;
+double end_neg = (me+1) * (min/nproc +1) - (me+1);
+// start and end of positive numbers
+double start_pos = me * (max/nproc +1) - me;
+double end_pos = (me+1) * (max/nproc +1) - (me+1);
+// counts of each size of number to each thread
 int pos=0, neg=0, count=0;
+
+b_me_neg[0] = 0.0;
+b_me_pos[0] = 0.0;
 // take only negative numbers
-for(i=0;i<len;i++) {
-  if(b[i] < 0 & b[i] <= start & b[i] > end) {
-    b_me[neg] = b[i];
-    c_me[neg] = c[i];
+for(i=1;i<=len;i++) {
+  if((b[i] < 0.0 && b[i] <= start_neg && b[i] > end_neg) || (b[i] == end_neg && end_neg == min)) {
+    b_me_neg[neg] = b[i];
+    c_me_neg[neg] = c[i];
     neg++;
   }
-}
-printf("Thread %d negatively start = %lf end = %lf\n", me, start, end);
-MPI_Barrier(MPI_COMM_WORLD);
-if(me==0)printf("\n"); // line Break for nice output
-// recalculate the following values for positive ranges
-start = me * (max/nproc +1) - me;
-end = (me+1) * (max/nproc +1) - (me+1);
-// take only positive numbers
-for(i=0;i<len;i++) {
-  if(b[i] > 0 & b[i] >= start & b[i] < end) {
-    b_me[neg+pos] = b[i];
-    c_me[neg+pos] = c[i];
+  else if((b[i] >= 0.0 && b[i] >= start_pos && b[i] < end_pos) || (b[i] == end_pos &&  end_pos == max)) {
+    b_me_pos[pos] = b[i];
+    c_me_pos[pos] = c[i];
     pos++;
   }
-  count = neg + pos;
 }
-printf("Thread %d report:\n\
-  start = %lf, end = %lf\n\
-  pos = %d, neg = %d, count = %d\
-  two values: %lf  %lf", me, start, end, pos, neg, count, b_me[0], b_me[count]);
+count = pos + neg;
+printf("Thread %d negatively start_neg = %lf end_neg = %lf\n\
+  and positively start_pos = %lf end_pos = %lf\n\
+  pos = %d , neg = %d , count =%d\n", me, start_neg, end_neg, start_pos, end_pos, pos, neg, count);
+MPI_Barrier(MPI_COMM_WORLD);
+if(me==0)printf("\n"); // line Break for nice output
 
+
+for(i=1; i<=neg; i++) {
+  printf("Thread %d b_me_neg[%d] = %lf\n", me, i, b_me_neg[i]);
+}
+MPI_Barrier(MPI_COMM_WORLD);
+for(i=1; i<=pos; i++) {
+  printf("Thread %d b_me_pos[%d] = %lf\n", me, i, b_me_pos[i]);
+}
+MPI_Barrier(MPI_COMM_WORLD);
+if(me==0) printf("\n\n\n");
 MPI_Finalize(); // finalize MPI peacefully (the system would kill the processes otherwise)
 
 cpu1 = clock();    // assign initial CPU time (IN CPU CLOCKS)

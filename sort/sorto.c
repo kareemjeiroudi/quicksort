@@ -8,21 +8,6 @@
 #define max_len 400000
 #define LENGTH 80
 
-/* Takes a dynamic array and maximum expected boundary,
- * returns the real size of tha array
- */
-// int find_size_of_dynamic(double *array, int maximum_bound) {
-//   int size;
-//   for(int i=0; i<maximum_bound; i++) {
-//     // once the array doesn't return proper value, break!
-//     if(isnan(array[i])) {
-//        size = i;
-//        break;
-//     }
-//   }
-//   return size;
-// }
-
 double find_minimum(double *array, int length) {
   double min=0;
   // int length = (int) (sizeof(array)/sizeof(array[0]));
@@ -82,7 +67,7 @@ int me, num_threads, pos, neg;
  */
 // #pragma omp threadprivate(ind_me, b_me, c_me)
 #pragma omp parallel private(me, start, end, i, j, new, cnew, cur, prev, pos, neg, ind_me, b_me, c_me,\
- cpu1, cpu2, cpu3, time1, time2, time3) shared(num_threads, counts, max, min, len, b, c) 
+ cpu1, cpu2, cpu3, time1, time2, time3, fp) shared(num_threads, counts, max, min, len, b, c) 
 {
   num_threads = omp_get_num_threads();
   me = omp_get_thread_num();
@@ -92,8 +77,10 @@ int me, num_threads, pos, neg;
   start = me * (min/num_threads +1) - me;
   end = (me+1) * (min/num_threads +1) - (me+1);
   printf("Thread %d negatively has start %lf and end %lf\n", me, start, end);
-  neg = 0;
+  neg = 1;
   // the negatives
+  b_me[0] = 0.00;
+  c_me[0] = 0.00;
   for(i=1;i<=len;i++) {
     if((b[i] < 0 && b[i] <= start && b[i] > end) || (b[i] == min && end == min)){
       b_me[neg] = b[i];
@@ -101,25 +88,17 @@ int me, num_threads, pos, neg;
       neg++;
     }
   }
-  if(end==min) {
-    printf("HEY!\n");
-  }
+  neg--;
   #pragma omp barrier
   // now the positves
   start = me * (max/num_threads +1) - me;
   end = (me+1) * (max/num_threads +1) - (me+1);
   pos = 0;
-  if(end == max) {
-    printf("HEY!\n");
-  }
   for(i=1;i<=len;i++) {
     if((b[i] >= 0 && b[i] >= start && b[i] < end) || (b[i] == max && end == max)) {
       b_me[neg+pos] = b[i];
       c_me[neg+pos] = c[i];
       pos++;
-    }
-    else if (end == max) {
-      printf("FUCK!\n");
     }
   }
   counts[me] = neg+pos;
@@ -127,20 +106,12 @@ int me, num_threads, pos, neg;
   // each thread report your thread to the terminal
   printf("Report of Thread %d\nCounts = %d, pos = %d, neg = %d\nstart = %lf and end = %lf\n",\
     me, counts[me], pos, neg, start, end);
-  // #pragma omp barrier
-  // for(i=0;i<counts[me];i++) {
-  //   printf("thread %d %d. = %lf\n",me, i+1, b_me[i]);
+  // if(me==0){
+  //   printf("The counts are:\n");
+  //   for(i=0;i<4;i++) {
+  //     printf("%d %d\n",i, counts[i]);
+  //   }
   // }
-  #pragma omp barrier
-  if(me==0){
-    printf("The counts are:\n");
-    for(i=0;i<4;i++) {
-      printf("%d %d\n",i, counts[i]);
-    }
-  }
-  #pragma omp barrier
-  printf("%lf %lf %d\n", end, max, end==max);
-  #pragma omp barrier
     cpu1 = clock();    // assign initial CPU time (IN CPU CLOCKS)
     gettimeofday(&time1, NULL); // returns structure with time in s and us (microseconds)
     int *ind_me = malloc(sizeof(int)*counts[me]);
@@ -162,8 +133,6 @@ int me, num_threads, pos, neg;
     dtime12 = ((time2.tv_sec  - time1.tv_sec)+(time2.tv_usec - time1.tv_usec)/1e6);
     printf("Elapsed wall time sorting         CPU time\n");
     printf("Duration 12 %f %f\n", dtime12,(float) (cpu2-cpu1)/CLOCKS_PER_SEC);
-    #pragma omp barrier
-    // }
     /* printing */
     // #pragma omp parallel ordered private(cure, me)
     cur=0;
@@ -173,21 +142,20 @@ int me, num_threads, pos, neg;
     {
       fp=fopen("sorted.txt", "a");
     }
-    if (me==0) {
-    for(i=1;i<=counts[me];i++) {
+    for(i=1;i<=neg;i++) {
       cur=ind_me[cur];
+      printf("%d %d\n",cur, ind_me[cur] );
       if(b_me[cur] < 0) {
         fprintf(fp,"%lf %lf\n",b_me[cur],c_me[cur]);
       }
     }
-     for(i=1;i<=counts[me];i++){
+    #pragma omp barrier
+     for(i=neg+1;i<=counts[me];i++){
       cur=ind_me[cur];
       if(b_me[cur] > 0) {
         fprintf(fp,"%lf %lf\n",b_me[cur],c_me[cur]);
       }
     }
-    }
-    
     #pragma omp barrier
     if(me==0){
       fclose(fp);
