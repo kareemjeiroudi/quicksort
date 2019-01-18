@@ -7,7 +7,7 @@
 #define max_len 400000
 #define LENGTH 40
 
-main(){
+
 int i=1,len,ind[max_len+1],j,cur,prev;
 double b[max_len+1],c[max_len+1],new,cnew,time;
 char name[LENGTH]="sort.txt",line[LENGTH];

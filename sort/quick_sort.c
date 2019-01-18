@@ -38,6 +38,7 @@ int main(){
   return 0;
 }//main() ends here
 
+// This is a wrapper function for the recursion process
 void quickSort(double *b, double *c, int beg, int end){
   int pivotLoc;
   if(beg < end){
@@ -54,9 +55,13 @@ void partitionArray(double *b, double *c, int beg, int end, int *pivotLoc){
   double tmp, tmp_c;  //used for swapping values
 
   while(1){
-
     //pivot pointing at left
     while(b[*pivotLoc] <= b[right] && *pivotLoc != right){  //pivot element <= right element
+      if(b[*pivotLoc] == b[right] && c[*pivotLoc] > c[right]) {
+        tmp_c = c[right];
+        c[right] = c[*pivotLoc];
+        c[*pivotLoc] =tmp_c;
+      }
       right--;  //move right one position towards left
     }
 
@@ -69,12 +74,17 @@ void partitionArray(double *b, double *c, int beg, int end, int *pivotLoc){
       b[right] = b[*pivotLoc];
       c[right] = c[*pivotLoc];
       b[*pivotLoc] = tmp;
-      c[*pivotLoc] = tmp_c;
+      c[*pivotLoc] =tmp_c;
       *pivotLoc = right;  //pivot is now pointing to right
     }
 
     //pivot pointing to right
     while(b[*pivotLoc] >= b[left] && *pivotLoc != left){  //pivot element >= left element
+      if(b[*pivotLoc] == b[left] && c[*pivotLoc] < c[left]) {
+        tmp_c = c[left];
+        c[left] = c[*pivotLoc];
+        c[*pivotLoc] = tmp_c;
+      }
       left++;    //move left one position towards right
     }
 
