@@ -63,27 +63,37 @@ int main(){
   	counts[me] = size;
   	// each thread sorts independantly
   	quickSort(b_me, c_me, 0, size-1);
-  	// sorted_b = allocate_matrix(nproc, len); 
-  	// double *sorted_b = (double *)malloc(nproc * len * sizeof(double));
-  	for(j=0;j<size;j++) {
-  		// now sorted_b[offset] corresponds to matrix(i, j)
-  		offset = me * len + j;
-  		sorted_b[offset] = b_me[j];
-  		sorted_c[offset] = c_me[j];
-  	}
+
+    #pragma omp ordered
+    {
+      if(me==0) {
+        fp = fopen("sorted.txt", "w");
+      } else {
+        fp = fopen("sorted.txt", "a");
+      }
+      for(i=0;i<size;i++) {
+        fprintf(fp, "%lf %lf\n", b_me[i], c_me[i]);
+      }
+      fclose(fp);
+    }
+  	// for(j=0;j<size;j++) {
+  	// 	// now sorted_b[offset] corresponds to matrix(i, j)
+  	// 	offset = me * len + j;
+  	// 	sorted_b[offset] = b_me[j];
+  	// 	sorted_c[offset] = c_me[j];
+  	// }
 	
 } // close the parallel region
 
 // Write both sorted arrays to sorted.txt serially
-fp = fopen("sorted.txt", "w");
-for(i=0;i<nproc;i++) {
-	printf("%d\n", counts[i]);
-	for(j=0;j<counts[i];j++) {
-		offset = i * len +j;
-		fprintf(fp, "%lf %lf\n", sorted_b[offset], sorted_c[offset]);
-	}
-}
-fclose(fp);
+// fp = fopen("sorted.txt", "w");
+// for(i=0;i<nproc;i++) {
+// 	for(j=0;j<counts[i];j++) {
+// 		offset = i * len +j;
+// 		fprintf(fp, "%lf %lf\n", sorted_b[offset], sorted_c[offset]);
+// 	}
+// }
+// fclose(fp);
   return 0;
 }//main() ends here
 
