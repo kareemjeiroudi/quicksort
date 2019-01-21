@@ -1,8 +1,8 @@
 import random
 
 fp = open("sort.txt", "w")
-for i in range(200000):
-	rand1 = random.uniform(-2, 2.0)
+for i in range(14000):
+	rand1 = random.uniform(-200, 40001.0)
 	rand1 = round(rand1, 3)
 	rand2 = random.uniform(-1.0, 5.0)
 	rand2 = round(rand2, 3)

@@ -5,7 +5,7 @@
 #include <sys/time.h> //for gettimeofday
 
 #define max_len 400000
-#define LENGTH 80
+#define LENGTH 100
 
 
 void partitionArray(double *b, double *c, int beg, int end, int *pivotLoc);
@@ -15,45 +15,63 @@ double find_minimum(double *array, int length);
 
 int main(){
   int i=0, j=0, len;
-  double b[max_len+1];
-  // double *b = malloc(sizeof(double)*max_len+1),
-  double c[max_len+1];
+  double b[max_len+1], c[max_len+1], time;
   char name[LENGTH]="sort.txt",line[LENGTH];
   FILE *fp;
+
+  static clock_t cpu0, cpu1, cpu2, cpu3;
+  static struct timeval time0, time1, time2, time3;
+  static int me;
+  #pragma omp threadprivate(cpu0, cpu1, cpu2, cpu3, time0, time1, time2, time3, me)
   // Reading is done serially by one thread
+  cpu0 = clock();
+  gettimeofday(&time0, NULL);
   fp=fopen(name,"r");
   while(1){ //1 serves as true, i.e. condition which is always true
     if(fgets(line, LENGTH,fp)==NULL)break; // finish reading when empty line is read
     if(sscanf(line, "%lf %lf",&b[i],&c[i])==-1) break; // finish reading after error
     i++;
   }
-
   len=i;fclose(fp);
-  printf("Number of items to sort: %i\n",len);
-  int me, nproc, size, offset;
+  printf("Number of items to sort: %d\n",len);
+
+  int nproc, size, offset;
   double *b_me, *c_me, start, end, range, min, max;
   // open a parallel region to calculate some global values
-  #pragma omp parallel shared(nproc, len, b, c, min, max, range)
+  #pragma omp parallel shared(nproc, min, max, b, len, range)
   {
-  	nproc = omp_get_num_threads();
-  	min = find_minimum(b, len);
-  	max = find_maximum(b, len);
-  	range = (max-min)/nproc;
+    cpu1 = clock();
+    gettimeofday(&time1, NULL); // time after reading
+    nproc = omp_get_num_threads(); // returns number of parallel threads
+    min = find_minimum(b, len);
+    max = find_maximum(b, len);
+    range = (max-min)/nproc;
   }
+  // Report Reading to console
+  printf("Reading CPU time = %lf\n", (float) (cpu1-cpu0)/CLOCKS_PER_SEC);
+  double dtime = ((time1.tv_sec  - time0.tv_sec)+(time1.tv_usec - time0.tv_usec)/1e6);
+  printf("Reading Wall clock = %lf\n\n", dtime);
+  printf("LOLO 1\n");
   int counts[nproc]; // array to store the size of each local array
-  double sorted_b[nproc * len]; // to gather the sorted arrays in order
-  double sorted_c[nproc * len];
-  #pragma omp parallel private(i, j, b_me, c_me, start, end, size, offset) shared(nproc, len, b, c, min, max, range, counts, sorted_b, sorted_c)
+  printf("LOLO 2\n");
+  float sorted_b[nproc*len]; // to gather the sorted arrays in order
+  printf("LOLO 3\n");
+  float sorted_c[nproc*len];
+  printf("LOLO 4\n");
+  #pragma omp parallel private(i, j, b_me, c_me, start, end, size, offset, dtime) shared(nproc, len, b, c, min, max, range, counts, sorted_b, sorted_c)
   {
   	me = omp_get_thread_num();
   	// calculate the interval of each thread
   	start = min + me * range;
   	end  = min + (me+1)*range;
-  	b_me = malloc(sizeof(double) * len);
-  	c_me = malloc(sizeof(double) * len);
+  	b_me = malloc(sizeof(double) * len/10);
+  	c_me = malloc(sizeof(double) * len/10);
   	size=0;
+    if(me==0) {
+      printf("max = %lf\n", max);
+    }
   	for(i=0;i<len;i++) {
-  		if ((start <= b[i] && b[i] < end) || (b[i] == min && end == min)) {
+  		if ((start <= b[i] && b[i] < end) || (b[i] == max && end == max)) {
   			b_me[size] = b[i];
   			c_me[size] = c[i];
   			size++;
@@ -63,28 +81,41 @@ int main(){
   	counts[me] = size;
   	// each thread sorts independantly
   	quickSort(b_me, c_me, 0, size-1);
-  	// sorted_b = allocate_matrix(nproc, len); 
-  	// double *sorted_b = (double *)malloc(nproc * len * sizeof(double));
   	for(j=0;j<size;j++) {
-  		// now sorted_b[offset] corresponds to matrix(i, j)
-  		offset = me * len + j;
+      offset = me * len + j;
   		sorted_b[offset] = b_me[j];
   		sorted_c[offset] = c_me[j];
   	}
-	
+    cpu2 = clock();
+    gettimeofday(&time2, NULL); // time after reading
+    // Report Sorting
+    printf("Sorting CPU time of thread %d = %lf\n", me, (float) (cpu2-cpu1)/CLOCKS_PER_SEC);
+    dtime = ((time2.tv_sec  - time1.tv_sec)+(time2.tv_usec - time1.tv_usec)/1e6);
+    printf("Sorting Wall clock of thread %d = %lf\n", me, dtime);
 } // close the parallel region
 
 // Write both sorted arrays to sorted.txt serially
 fp = fopen("sorted.txt", "w");
+#pragma omp for private(j) ordered
 for(i=0;i<nproc;i++) {
-	printf("%d\n", counts[i]);
+	printf("Thread %d sorted %i elements\n", i, counts[i]);
 	for(j=0;j<counts[i];j++) {
-		offset = i * len +j;
+    offset = i * len + j;
 		fprintf(fp, "%lf %lf\n", sorted_b[offset], sorted_c[offset]);
 	}
 }
 fclose(fp);
-  return 0;
+printf("\n");
+#pragma omp parallel private(dtime)
+{
+  cpu3 = clock();
+  gettimeofday(&time3, NULL);
+  // Report Writing 
+  printf("Writing CPU time of thread %d = %lf\n", me, (float) (cpu3-cpu2)/CLOCKS_PER_SEC);
+  dtime = ((time3.tv_sec  - time2.tv_sec)+(time3.tv_usec - time2.tv_usec)/1e6);
+  printf("Writing Wall clock of thread %d = %lf\n", me, dtime); 
+}
+return 0;
 }//main() ends here
 
 // This is a wrapper function for the recursion process
