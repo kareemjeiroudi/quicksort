@@ -1,0 +1,27 @@
+aljeiroudi@mp1:sort$ quick_sorto
+Number of items to sort: 100000
+Reading CPU time = 0.100000
+Reading Wall clock = 0.092035
+
+Sorting CPU time of thread 3 = 0.010000
+Sorting Wall clock of thread 3 = 0.003952
+Sorting CPU time of thread 0 = 0.010000
+Sorting Wall clock of thread 0 = 0.006962
+Sorting CPU time of thread 1 = 0.010000
+Sorting Wall clock of thread 1 = 0.004117
+Sorting CPU time of thread 2 = 0.010000
+Sorting Wall clock of thread 2 = 0.004191
+Thread 0 sorted 25117 elements
+Thread 1 sorted 24842 elements
+Thread 2 sorted 24913 elements
+Thread 3 sorted 25128 elements
+
+Writing CPU time of thread 0 = 0.630000
+Writing Wall clock of thread 0 = 0.156769
+Writing CPU time of thread 2 = 0.630000
+Writing Wall clock of thread 2 = 0.156551
+Writing CPU time of thread 1 = 0.630000
+Writing Wall clock of thread 1 = 0.156629
+Writing CPU time of thread 3 = 0.630000
+Writing Wall clock of thread 3 = 0.156793
+Total wall clock 0.310306

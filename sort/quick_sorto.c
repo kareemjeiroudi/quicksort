@@ -51,27 +51,24 @@ int main(){
   printf("Reading CPU time = %lf\n", (float) (cpu1-cpu0)/CLOCKS_PER_SEC);
   double dtime = ((time1.tv_sec  - time0.tv_sec)+(time1.tv_usec - time0.tv_usec)/1e6);
   printf("Reading Wall clock = %lf\n\n", dtime);
-  printf("LOLO 1\n");
   int counts[nproc]; // array to store the size of each local array
-  printf("LOLO 2\n");
-  float sorted_b[nproc*len]; // to gather the sorted arrays in order
-  printf("LOLO 3\n");
-  float sorted_c[nproc*len];
-  printf("LOLO 4\n");
+  // to gather the sorted arrays in order
+  // and they simulate a 2D array
+  double *sorted_b = malloc(nproc*len*sizeof(double));
+  double *sorted_c = malloc(nproc*len*sizeof(double));
+  // printf("LOLO 4\n");
   #pragma omp parallel private(i, j, b_me, c_me, start, end, size, offset, dtime) shared(nproc, len, b, c, min, max, range, counts, sorted_b, sorted_c)
   {
   	me = omp_get_thread_num();
   	// calculate the interval of each thread
   	start = min + me * range;
   	end  = min + (me+1)*range;
-  	b_me = malloc(sizeof(double) * len/10);
-  	c_me = malloc(sizeof(double) * len/10);
+    // to sort independetly
+  	b_me = malloc(sizeof(double) * len);
+  	c_me = malloc(sizeof(double) * len);
   	size=0;
-    if(me==0) {
-      printf("max = %lf\n", max);
-    }
   	for(i=0;i<len;i++) {
-  		if ((start <= b[i] && b[i] < end) || (b[i] == max && end == max)) {
+  		if ((start <= b[i] && b[i] < end) || (b[i] == max && end == max)) { // 2nd condition includes final value in the interval [n-range:n]
   			b_me[size] = b[i];
   			c_me[size] = c[i];
   			size++;
@@ -81,7 +78,9 @@ int main(){
   	counts[me] = size;
   	// each thread sorts independantly
   	quickSort(b_me, c_me, 0, size-1);
+
   	for(j=0;j<size;j++) {
+      // offset = i * len +j is equivelent to matrix[i][j]!
       offset = me * len + j;
   		sorted_b[offset] = b_me[j];
   		sorted_c[offset] = c_me[j];
@@ -94,7 +93,7 @@ int main(){
     printf("Sorting Wall clock of thread %d = %lf\n", me, dtime);
 } // close the parallel region
 
-// Write both sorted arrays to sorted.txt serially
+// Write both sorted arrays to sorted.txt parallely
 fp = fopen("sorted.txt", "w");
 #pragma omp for private(j) ordered
 for(i=0;i<nproc;i++) {
@@ -115,6 +114,8 @@ printf("\n");
   dtime = ((time3.tv_sec  - time2.tv_sec)+(time3.tv_usec - time2.tv_usec)/1e6);
   printf("Writing Wall clock of thread %d = %lf\n", me, dtime); 
 }
+dtime = ((time3.tv_sec  - time0.tv_sec)+(time3.tv_usec - time0.tv_usec)/1e6);
+printf("Total wall clock %lf\n", dtime);
 return 0;
 }//main() ends here
 

@@ -1,0 +1,12 @@
+aljeiroudi@mp1:sort$ quick_sort 
+Number of items to sort: 100000
+Reading CPU time = 0.080000
+Reading Wall clock = 0.083880
+
+Sorting CPU time = 0.010000
+Sorting Wall clock = 0.012156
+
+Writing CPU time = 0.160000
+Writing Wall clock = 0.157197
+
+Total Wall clock = 0.253233

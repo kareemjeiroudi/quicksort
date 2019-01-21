@@ -1,0 +1,86 @@
+aljeiroudi@mp1:sort$ quick_sorto
+Number of items to sort: 100000
+Reading CPU time = 0.330000
+Reading Wall clock = 0.160597
+
+Sorting CPU time of thread 3 = 0.550000
+Sorting Wall clock of thread 3 = 0.141913
+Sorting CPU time of thread 7 = 0.540000
+Sorting Wall clock of thread 7 = 0.137984
+Sorting CPU time of thread 12 = 0.550000
+Sorting Wall clock of thread 12 = 0.139692
+Sorting CPU time of thread 4 = 0.310000
+Sorting Wall clock of thread 4 = 0.079243
+Sorting CPU time of thread 11 = 0.800000
+Sorting Wall clock of thread 11 = 0.201159
+Sorting CPU time of thread 13 = 0.810000
+Sorting Wall clock of thread 13 = 0.204782
+Sorting CPU time of thread 9 = 0.560000
+Sorting Wall clock of thread 9 = 0.140568
+Sorting CPU time of thread 8 = 0.320000
+Sorting Wall clock of thread 8 = 0.080672
+Sorting CPU time of thread 6 = 0.320000
+Sorting Wall clock of thread 6 = 0.081403
+Sorting CPU time of thread 15 = 0.560000
+Sorting Wall clock of thread 15 = 0.139128
+Sorting CPU time of thread 14 = 1.340000
+Sorting Wall clock of thread 14 = 0.338470
+Sorting CPU time of thread 1 = 1.340000
+Sorting Wall clock of thread 1 = 0.339390
+Sorting CPU time of thread 5 = 0.570000
+Sorting Wall clock of thread 5 = 0.140367
+Sorting CPU time of thread 2 = 1.350000
+Sorting Wall clock of thread 2 = 0.340403
+Sorting CPU time of thread 0 = 1.110000
+Sorting Wall clock of thread 0 = 0.278463
+Sorting CPU time of thread 10 = 1.260000
+Sorting Wall clock of thread 10 = 0.315629
+Thread 0 sorted 6266 elements
+Thread 1 sorted 6221 elements
+Thread 2 sorted 6256 elements
+Thread 3 sorted 6374 elements
+Thread 4 sorted 6195 elements
+Thread 5 sorted 6220 elements
+Thread 6 sorted 6280 elements
+Thread 7 sorted 6147 elements
+Thread 8 sorted 6220 elements
+Thread 9 sorted 6259 elements
+Thread 10 sorted 6198 elements
+Thread 11 sorted 6236 elements
+Thread 12 sorted 6306 elements
+Thread 13 sorted 6339 elements
+Thread 14 sorted 6247 elements
+Thread 15 sorted 6236 elements
+
+Writing CPU time of thread 8 = 0.900000
+Writing Wall clock of thread 8 = 0.335221
+Writing CPU time of thread 9 = 0.900000
+Writing Wall clock of thread 9 = 0.335346
+Writing CPU time of thread 10 = 0.380000
+Writing Wall clock of thread 10 = 0.205292
+Writing CPU time of thread 11 = 0.900000
+Writing Wall clock of thread 11 = 0.335764
+Writing CPU time of thread 13 = 0.900000
+Writing CPU time of thread 15 = 0.380000
+Writing Wall clock of thread 15 = 0.205518
+Writing Wall clock of thread 13 = 0.335599
+Writing CPU time of thread 12 = 0.910000
+Writing Wall clock of thread 12 = 0.336734
+Writing CPU time of thread 14 = 0.380000
+Writing Wall clock of thread 14 = 0.205442
+Writing CPU time of thread 4 = 0.910000
+Writing Wall clock of thread 4 = 0.336738
+Writing CPU time of thread 5 = 0.370000
+Writing Wall clock of thread 5 = 0.204468
+Writing CPU time of thread 7 = 0.920000
+Writing Wall clock of thread 7 = 0.338006
+Writing CPU time of thread 6 = 0.900000
+Writing Wall clock of thread 6 = 0.334606
+Writing CPU time of thread 3 = 1.140000
+Writing Wall clock of thread 3 = 0.393285
+Writing CPU time of thread 2 = 0.610000
+Writing Wall clock of thread 2 = 0.279166
+Writing CPU time of thread 0 = 0.620000
+Writing Wall clock of thread 0 = 0.281151
+Writing CPU time of thread 1 = 0.620000
+Writing Wall clock of thread 1 = 0.280204

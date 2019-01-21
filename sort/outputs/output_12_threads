@@ -1,0 +1,67 @@
+aljeiroudi@mp1:sort$ quick_sorto
+Number of items to sort: 100000
+Reading CPU time = 0.070000
+Reading Wall clock = 0.081993
+
+Sorting CPU time of thread 11 = 0.960000
+Sorting Wall clock of thread 11 = 0.254598
+Sorting CPU time of thread 10 = 0.970000
+Sorting Wall clock of thread 10 = 0.254660
+Sorting CPU time of thread 9 = 1.740000
+Sorting Wall clock of thread 9 = 0.449143
+Sorting CPU time of thread 2 = 1.760000
+Sorting Wall clock of thread 2 = 0.455407
+Sorting CPU time of thread 3 = 1.760000
+Sorting Wall clock of thread 3 = 0.455500
+Sorting CPU time of thread 0 = 1.760000
+Sorting Wall clock of thread 0 = 0.456794
+Sorting CPU time of thread 6 = 1.490000
+Sorting Wall clock of thread 6 = 0.384691
+Sorting CPU time of thread 1 = 1.760000
+Sorting Wall clock of thread 1 = 0.457241
+Sorting CPU time of thread 4 = 1.490000
+Sorting Wall clock of thread 4 = 0.385821
+Sorting CPU time of thread 5 = 1.440000
+Sorting Wall clock of thread 5 = 0.373955
+Sorting CPU time of thread 8 = 1.760000
+Sorting Wall clock of thread 8 = 0.454107
+Sorting CPU time of thread 7 = 1.680000
+Sorting Wall clock of thread 7 = 0.434163
+Thread 0 sorted 8279 elements
+Thread 1 sorted 8311 elements
+Thread 2 sorted 8527 elements
+Thread 3 sorted 8244 elements
+Thread 4 sorted 8344 elements
+Thread 5 sorted 8254 elements
+Thread 6 sorted 8261 elements
+Thread 7 sorted 8388 elements
+Thread 8 sorted 8264 elements
+Thread 9 sorted 8427 elements
+Thread 10 sorted 8346 elements
+Thread 11 sorted 8355 elements
+
+Writing CPU time of thread 4 = 0.670000
+Writing Wall clock of thread 4 = 0.247717
+Writing CPU time of thread 8 = 0.670000
+Writing Wall clock of thread 8 = 0.247457
+Writing CPU time of thread 9 = 0.680000
+Writing Wall clock of thread 9 = 0.251898
+Writing CPU time of thread 10 = 0.680000
+Writing Wall clock of thread 10 = 0.252041
+Writing CPU time of thread 6 = 0.670000
+Writing Wall clock of thread 6 = 0.248877
+Writing CPU time of thread 11 = 0.690000
+Writing Wall clock of thread 11 = 0.252087
+Writing CPU time of thread 7 = 0.670000
+Writing Wall clock of thread 7 = 0.247375
+Writing CPU time of thread 5 = 0.670000
+Writing Wall clock of thread 5 = 0.247613
+Writing CPU time of thread 3 = 0.920000
+Writing Wall clock of thread 3 = 0.310935
+Writing CPU time of thread 2 = 0.920000
+Writing Wall clock of thread 2 = 0.311032
+Writing CPU time of thread 0 = 1.050000
+Writing Wall clock of thread 0 = 0.342520
+Writing CPU time of thread 1 = 1.040000
+Writing Wall clock of thread 1 = 0.341104
+Total wall clock 1.098762

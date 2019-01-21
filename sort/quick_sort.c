@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h> // for CPU time
+#include <sys/time.h> //for gettimeofda
 
 #define max_len 400000
 #define LENGTH 80
@@ -10,11 +13,14 @@ void quickSort(double *b, double *c, int beg, int end);
 int main(){
   int i=0,len;
   double b[max_len+1];
-  // double *b = malloc(sizeof(double)*max_len+1),
   double c[max_len+1];
   char name[LENGTH]="sort.txt",line[LENGTH];
   FILE *fp;
+  clock_t cpu0, cpu1, cpu2, cpu3;
+  struct timeval time0, time1, time2, time3;
 
+  cpu0 = clock();
+  gettimeofday(&time0, NULL);
   fp=fopen(name,"r");
   while(1){ //1 serves as true, i.e. condition which is always true
     if(fgets(line, LENGTH,fp)==NULL)break; // finish reading when empty line is read
@@ -24,17 +30,35 @@ int main(){
 
   len=i;fclose(fp);
   printf("Number of items to sort: %i\n",len);
-  
+  cpu1 = clock();
+  gettimeofday(&time1, NULL);
+  // Report Reading to console
+  printf("Reading CPU time = %lf\n", (float) (cpu1-cpu0)/CLOCKS_PER_SEC);
+  double dtime = ((time1.tv_sec  - time0.tv_sec)+(time1.tv_usec - time0.tv_usec)/1e6);
+  printf("Reading Wall clock = %lf\n\n", dtime);
+
 
   quickSort(b, c, 0, len-1);  //beg = 0 start index of array end = 5 last index of array
-
+  cpu2 = clock();
+  gettimeofday(&time2, NULL);
+  // Report Sorting to console
+  printf("Sorting CPU time = %lf\n", (float) (cpu2-cpu1)/CLOCKS_PER_SEC);
+  dtime = ((time2.tv_sec  - time1.tv_sec)+(time2.tv_usec - time1.tv_usec)/1e6);
+  printf("Sorting Wall clock = %lf\n\n", dtime);
   // writing sorted element of both arrays to sorted.txt
   fp = fopen("sorted.txt", "w");
   for(i = 0; i < len; i++){
     fprintf(fp, "%lf %lf\n", b[i], c[i]);
   }
   fclose(fp);
-  
+  cpu3 = clock();
+  gettimeofday(&time3, NULL);
+  // Report Writing time to console
+  printf("Writing CPU time = %lf\n", (float) (cpu3-cpu2)/CLOCKS_PER_SEC);
+  dtime = ((time3.tv_sec  - time2.tv_sec)+(time3.tv_usec - time2.tv_usec)/1e6);
+  printf("Writing Wall clock = %lf\n\n", dtime);
+  dtime = ((time3.tv_sec  - time0.tv_sec)+(time3.tv_usec - time0.tv_usec)/1e6);
+  printf("Total Wall clock = %lf\n\n", dtime);
   return 0;
 }//main() ends here
 
